@@ -26,11 +26,11 @@ class Vehicle:
         self.y += self.vy
         
         if self.y+self.r < self.g:
-            self.vy += 0.3
+            self.vy = 0
             if self.vy > self.g - (self.y+self.r):
                 self.vy = self.g - (self.y+self.r)
         else:
-            self.vy = 0 #-10
+            self.vy = 0 
         
     def display(self):
         self.update()
@@ -44,11 +44,17 @@ class f1Car(Vehicle):
     def __init__(self,x,y,r,g,img,w,h,F):
         Vehicle.__init__(self,x,y,r,g,img,w,h,F)
         self.keyHandler={LEFT:False, RIGHT:False, UP:False,DOWN:False}
+        self.powerup = False
+        self.coin_sound = player.loadFile(path+"/Effects/coin.mp3")
+        self.coin_count = 0
         
     def update(self):
-        self.velocity()
+        if self.y + self.r > game.h:
+            self.y = game.h - 60
+        
+        self.velocity()    
         if self.keyHandler[RIGHT]:
-            self.vx = 15
+            self.vx = 10
             self.dir = 1
         elif self.keyHandler[UP]:
             self.vy = -4
@@ -59,6 +65,18 @@ class f1Car(Vehicle):
             
         if self.x > game.w/2:
             game.x += self.vx
+            
+        for s in game.coins:
+                if self.distance(s) <= self.r + s.r:
+                    game.coins.remove(s)
+                    del s
+                    self.coin_sound.rewind()
+                    self.coin_sound.play()
+                    self.coin_count += 1
+        
+    def distance(self,e):
+        return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
+      
 
 class Ambulance(Vehicle):
     def __init__(self,x,y,r,g,img,w,h,F,x1,x2):
@@ -89,20 +107,31 @@ class Viper(Vehicle):
         self.vx = -5
 
 class Coin:
-    def __init__(self,x1,y1,r1,img,w1,h1,F):
-        self.x1 = x1
-        self.y1 = y1
-        self.r1 = r1
+    def __init__(self,x,y,r,img,w1,h1,F,t):
+        self.x = x
+        self.y = y
+        self.r = r
         self.w1 = w1
         self.h1 = h1
         self.F = F
         self.f = 0
-        self.img = loadImage(path+"/Images"+img)
+        self.t = t
+        self.img = loadImage(path+"/Images/coins.png")
+        self.dir = 1
+        
+    def update(self):
+        self.t = self.t + 1
 
-# class Explosion:
-    
-#class PowerUp:
-    
+    def display(self):
+        self.update()
+        self.f = (self.f+0.125)%self.F
+        
+        if self.dir > 0:
+            image(self.img,self.x-self.w1//2-game.x,self.y-self.h1//2,self.w1,self.h1,int(self.f)*self.w1,0,int(self.f+1)*self.w1,self.h1)
+        elif self.dir < 0:
+            image(self.img,self.x-self.w1//2-game.x,self.y-self.h1//2,self.w1,self.h1,int(self.f+1)*self.w1,0,int(self.f)*self.w1,self.h1)
+
+
 class Game:
     def __init__(self,w,h,g):
         self.w=w
@@ -114,15 +143,27 @@ class Game:
         #images
         self.win_img = loadImage(path+"/Images/win.jpg")
         self.lose_img = loadImage(path+"/Images/gameover.png")
-        self.f1Car = f1Car(50,665,20,self.g,"f1Car.png",110,80,7)
-        # self.police = Police(50,665,80,self.g,"police.png",110,80,1)
-        # self.ambulance = Ambulance(50,665,80,self.g,"ambulance.png",110,80,1)
-        # self.taxi = Taxi(50,665,80,self.g,"taxi.png",110,80,1)
-        # self.viper = Viper(50,665,80,self.g,"viper.png",110,80,1)
+        self.f1Car = f1Car(50,665,20,self.g,"f1Car.png",110,80,1)
+      
         self.background_images=[]
         for i in range(6,0,-1):
             self.background_images.append(loadImage(path+"/Images/layer"+str(i)+".png"))
-        self.enemies=[]
+            
+        # self.enemies=[]
+        # self.enemies.append(Police(50,665,80,self.g,"police.png",110,80,1))
+        # self.enemies.append(Ambulance(50,665,80,self.g,"ambulance.png",110,80,1))
+        # self.enemies.append(Taxi(50,665,80,self.g,"taxi.png",110,80,1))
+        # self.enemies.append(Viper(50,665,80,self.g,"viper.png",110,80,1))
+        
+        self.coins = []
+        for i in range(10):
+            self.coins.append(Coin(350+i*100,665,20,"coins.png",40,40,6,6))
+            self.coins.append(Coin(1500+i*100,760,20,"coins.png",40,40,6,6))
+            self.coins.append(Coin(3000+i*100,850,20,"coins.png",40,40,6,6))
+            self.coins.append(Coin(5000+i*100,760,20,"coins.png",40,40,6,6))
+            self.coins.append(Coin(6500+i*100,850,20,"coins.png",40,40,6,6))
+            self.coins.append(Coin(8000+i*100,575,20,"coins.png",40,40,6,6))
+            self.coins.append(Coin(9500+i*100,665,20,"coins.png",40,40,6,6))
         
         #sounds
         self.pauseSound = player.loadFile(path+"/Effects/pause.mp3")
@@ -142,8 +183,18 @@ class Game:
             image(img,0-x,0)
             image(img,self.w-x,0)
             cnt-=1
+        
+        for c in self.coins:
+            c.display()
             
         self.f1Car.display()
+        
+        fill(255,255,255)
+        textSize(26)
+        text("Score:",0,40)
+        fill(200,200,200)
+        textSize(26)
+        text(0+self.f1Car.coin_count*15,80,40)
     
 game = Game(1440,900,500)
 
