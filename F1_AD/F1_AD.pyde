@@ -19,8 +19,18 @@ class Vehicle:
         self.dir = 1
   
     def update(self):
+        self.velocity()
+    
+    def velocity(self):
         self.x += self.vx
         self.y += self.vy
+        
+        if self.y+self.r < self.g:
+            self.vy += 0.3
+            if self.vy > self.g - (self.y+self.r):
+                self.vy = self.g - (self.y+self.r)
+        else:
+            self.vy = 0 #-10
         
     def display(self):
         self.update()
@@ -36,19 +46,17 @@ class f1Car(Vehicle):
         self.keyHandler={LEFT:False, RIGHT:False, UP:False,DOWN:False}
         
     def update(self):
+        self.velocity()
         if self.keyHandler[RIGHT]:
             self.vx = 15
             self.dir = 1
         elif self.keyHandler[UP]:
-            self.vy = -3
+            self.vy = -4
             self.dir = 1
         elif self.keyHandler[DOWN]:
-            self.vy = 3
+            self.vy = 4
             self.dir = 1
             
-        self.x += self.vx
-        self.y += self.vy
-        
         if self.x > game.w/2:
             game.x += self.vx
 
@@ -102,18 +110,18 @@ class Game:
         self.g=g
         self.x=0
         self.pause = False
+
         #images
         self.win_img = loadImage(path+"/Images/win.jpg")
         self.lose_img = loadImage(path+"/Images/gameover.png")
-        self.f1Car = f1Car(50,665,80,self.g,"f1Car.png",110,80,7)
+        self.f1Car = f1Car(50,665,20,self.g,"f1Car.png",110,80,7)
         # self.police = Police(50,665,80,self.g,"police.png",110,80,1)
         # self.ambulance = Ambulance(50,665,80,self.g,"ambulance.png",110,80,1)
         # self.taxi = Taxi(50,665,80,self.g,"taxi.png",110,80,1)
         # self.viper = Viper(50,665,80,self.g,"viper.png",110,80,1)
-        # self.truck = Truck(50,665,80,self.g,"truck.png",110,80,1)
-        self.bgImgs=[]
+        self.background_images=[]
         for i in range(6,0,-1):
-            self.bgImgs.append(loadImage(path+"/Images/layer"+str(i)+".png"))
+            self.background_images.append(loadImage(path+"/Images/layer"+str(i)+".png"))
         self.enemies=[]
         
         #sounds
@@ -129,7 +137,7 @@ class Game:
             
     def display(self):
         cnt = 6
-        for img in self.bgImgs:
+        for img in self.background_images:
             x = (game.x//cnt)%game.w
             image(img,0-x,0)
             image(img,self.w-x,0)
@@ -177,5 +185,6 @@ def keyReleased():
         game.f1Car.keyHandler[LEFT]=False
     elif keyCode == RIGHT:
         game.f1Car.keyHandler[RIGHT]=False
+
         
         
