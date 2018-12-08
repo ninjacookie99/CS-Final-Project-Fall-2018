@@ -43,12 +43,14 @@ class Object:
             self.f = (self.f+0.1)%self.F
         elif isinstance (self, Viper): 
             self.f = (self.f+0.1)%self.F
+        elif isinstance (self, Explosion): 
+            self.f = (self.f+0.1)%self.F
     
         if self.dir > 0:
             image(self.img,self.x-self.w//2-game.x,self.y-self.h//2,self.w,self.h,int(self.f)*self.w,0,int(self.f+1)*self.w,self.h)
         elif self.dir < 0:
             image(self.img,self.x-self.w//2-game.x,self.y-self.h//2,self.w,self.h,int(self.f+1)*self.w,0,int(self.f)*self.w,self.h)
-    
+
 class f1Car(Object):
     def __init__(self,x,y,r,g,img,w,h,F):
         Object.__init__(self,x,y,r,g,img,w,h,F)
@@ -66,31 +68,38 @@ class f1Car(Object):
             self.y = game.h - 45
         elif self.y + self.r-55 < game.g: #upper absolute bound
             self.y = game.g + 46
-        
+            
         self.velocity() #implements velocity function for f1Car
         if self.keyHandler[RIGHT]:
-            self.vx = 7 
-            self.dir = 1
+                self.vx = 7 
+                self.dir = 1
         elif self.keyHandler[UP]:
-            self.vy = -3
-            self.dir = 1
+                self.vy = -3
+                self.dir = 1
         elif self.keyHandler[DOWN]:
-            self.vy = 3
-            self.dir = 1
-        
-        if self.x > 10000: #changes f1Car velocity to 10
-                self.vx = 10
+                self.vy = 3
+                self.dir = 1
+            
+        if self.x > 10000: #changes f1Car velocity to 10 once f1car crosses x distance
+            self.vx = 10
+            if self.keyHandler[UP]:
+                self.vy = -5 #changes f1Car upward velocity to 4
+                self.dir = 1
+            elif self.keyHandler[DOWN]: 
+                self.vy = 5  #changes f1Car downward velocity to 4
+                self.dir = 1
+                
         if self.x > 50000:
-                self.vx = 13 #changes f1Car velocity to 13
-                if self.keyHandler[UP]:
-                    self.vy = -4 #changes f1Car upward velocity to 4
-                    self.dir = 1
-                elif self.keyHandler[DOWN]: 
-                    self.vy = 4  #changes f1Car downward velocity to 4
-                    self.dir = 1
-                    
+            self.vx = 13 #changes f1Car velocity to 13 once f1car crosses x distance
+            if self.keyHandler[UP]:
+                self.vy = -5 #changes f1Car upward velocity to 5
+                self.dir = 1
+            elif self.keyHandler[DOWN]: 
+                self.vy = 5  #changes f1Car downward velocity to 5
+                self.dir = 1
+                        
         if self.x > 100000 :
-                self.vx = 15 #changes f1Car velocity to 10
+                self.vx = 15 #changes f1Car velocity to 10 once f1car crosses x distance
                 
         if self.x > game.w/2:
             game.x += self.vx #creates movement illusion as f1Car reaches half of the screen
@@ -103,32 +112,36 @@ class f1Car(Object):
                     self.coin_sound.play()
                     self.coin_count += 1
                     
-        for p in game.powerups: #coin collection by f1Car
+        for p in game.powerups: #powerup collection by f1Car
                 if self.distance(p) <= self.r + p.r:
                     game.powerups.remove(p)
-                    del p #removes coins off the screen
+                    del p #removes powerup off the screen
                     self.powerup_sound.rewind()
                     self.powerup_sound.play()
                     self.powerup_count += 1
         
         for s in game.score: #accumulates score as f1Car travels in x direction
-            if self.x > 100:
+            if self.x > 100 and game.lose == False:
                 self.score_count+= 2
                 
         for e in game.enemies: #collision detection
             if self.distance(e) <= self.r + e.r:
                 self.vx = 0
+                game.enemies.remove(e)
+                game.explosions.append(Explosion(e.x,e.y,50,0,"explosion.png",80,100,10))
                 self.death_sound.rewind()
                 self.death_sound.play()
                 game.music.pause()
                 game.f1Sound.pause()
-                game.lose = True #work on the collision detection, i think we have to use rectangles
+                game.lose = True
                 game.win = False
+                del e
+                return
 
     def distance(self,e): #algorithm for collision detection
         return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
 
-class Ambulance(Object):
+class Ambulance(Object): #ambulance class
     def __init__(self,x,y,r,g,img,w,h,F,x1,x2):
         Object.__init__(self,x,y,r,g,img,w,h,F)
         self.x1=x1
@@ -136,10 +149,10 @@ class Ambulance(Object):
         self.vx = -2.5
         self.dir = 1
     
-    def update(self):
+    def update(self): 
         self.x += self.vx #velocity function for ambulance
         
-class Police(Object):
+class Police(Object): #police car class
     def __init__(self,x,y,r,g,img,w,h,F,x1,x2):
         Object.__init__(self,x,y,r,g,img,w,h,F)
         self.x1=x1
@@ -150,7 +163,7 @@ class Police(Object):
     def update(self):
         self.x += self.vx #velocity function for Police
  
-class Taxi(Object):
+class Taxi(Object):  #taxi class
     def __init__(self,x,y,r,g,img,w,h,F,x1,x2):
         Object.__init__(self,x,y,r,g,img,w,h,F)
         self.x1=x1
@@ -161,7 +174,7 @@ class Taxi(Object):
     def update(self):
         self.x += self.vx #velocity function for Taxi
 
-class Viper(Object):
+class Viper(Object): #dodge viper class
     def __init__(self,x,y,r,g,img,w,h,F,x1,x2):
         Object.__init__(self,x,y,r,g,img,w,h,F)
         self.x1=x1
@@ -172,18 +185,17 @@ class Viper(Object):
     def update(self):
         self.x += self.vx #velocity function for Viper
 
-class Explosion(Object):
+class Explosion(Object): #explosion class
     def __init__(self,x,y,r,g,img,w,h,F):
         Object.__init__(self,x,y,r,g,img,w,h,F)
         
     def update(self):
-        if int(self.f) == 9:
+        if int(self.f) == 9: #removes explosion frames from the screen
             game.explosions.remove(self)
             del self
-            game.explosions.append(Explosion(e.x,e.y,50,0,"explosion.png",80,100,10))
             return
                  
-class Coin:
+class Coin: #coin class
     def __init__(self,x,y,r,img,w1,h1,F,t):
         self.x = x
         self.y = y
@@ -201,8 +213,8 @@ class Coin:
 
     def display(self):
         self.update()
-        self.f = (self.f+0.125)%self.F
-        
+        self.f = (self.f+0.125)%self.F #displays coin frames on the screen
+        #displays coin image on the screen
         if self.dir > 0:
             image(self.img,self.x-self.w1//2-game.x,self.y-self.h1//2,self.w1,self.h1,int(self.f)*self.w1,0,int(self.f+1)*self.w1,self.h1)
         elif self.dir < 0:
@@ -226,8 +238,8 @@ class PowerUp:
 
     def display(self):
         self.update()
-        self.f = (self.f+0.125)%self.F
-        
+        self.f = (self.f+0.125)%self.F #displays powerup frames on the screen
+        #displays powerup image on the screen
         if self.dir > 0:
             image(self.img,self.x-self.w1//2-game.x,self.y-self.h1//2,self.w1,self.h1,int(self.f)*self.w1,0,int(self.f+1)*self.w1,self.h1)
         elif self.dir < 0:
@@ -244,12 +256,12 @@ class Game:
         self.lose = False
         self.win = False
 
-        #images
-        self.win_img = loadImage(path+"/Images/win.jpg")
-        self.lose_img = loadImage(path+"/Images/gameover.png")
-        self.f1Car = f1Car(50,665,20,self.g,"f1Car.png",110,80,1)
+        #gameimages
+        self.f1Car = f1Car(50,665,20,self.g,"f1Car.png",110,80,1) #creates f1Car object for the game class
         self.menubackground = loadImage(path+"/Images/menubackground.jpg")
-        self.background_images=[]
+        self.instructions = loadImage(path+"/Images/instructions.jpg")
+        
+        self.background_images=[] 
         for i in range(6,0,-1):
             self.background_images.append(loadImage(path+"/Images/layer"+str(i)+".png"))
         
@@ -275,10 +287,10 @@ class Game:
             self.coins.append(Coin(9500+i*100,665,20,"coins.png",40,40,6,6))
         
         self.powerups = []
-        self.powerups.append(PowerUp(2000,665,20,"powerup.png",50,50,6,6))
-        self.powerups.append(PowerUp(4500,760,20,"powerup.png",50,50,6,6))
-        self.powerups.append(PowerUp(8500,575,20,"powerup.png",50,50,6,6))
-        self.powerups.append(PowerUp(15000,850,20,"powerup.png",50,50,6,6))
+        self.powerups.append(PowerUp(2000,665,30,"powerup.png",50,50,6,6))
+        self.powerups.append(PowerUp(4500,760,30,"powerup.png",50,50,6,6))
+        self.powerups.append(PowerUp(8500,575,30,"powerup.png",50,50,6,6))
+        self.powerups.append(PowerUp(15000,850,30,"powerup.png",50,50,6,6))
         
         self.score = [0]
         self.explosions = []
@@ -286,7 +298,8 @@ class Game:
         #sounds
         self.pauseSound = player.loadFile(path+"/Effects/pause.mp3")
         self.music = player.loadFile(path+"/Effects/background.mp3")
-        self.music.play()
+        self.menuMusic = player.loadFile(path+"/Effects/menu.mp3")
+        self.menuMusic.play()
         self.winSound = player.loadFile(path+"/Effects/win.mp3")
         self.loseSound = player.loadFile(path+"/Effects/lose.mp3")
         self.f1Sound = player.loadFile(path+"/Effects/formula1.mp3")
@@ -296,7 +309,6 @@ class Game:
             
     def display(self):
         cnt = 6
-            
         for img in self.background_images: #displays parallax background on screen
                 x = (game.x//cnt)%game.w
                 image(img,0-x,0)
@@ -312,7 +324,7 @@ class Game:
         for coin in self.coins: #displays coins on screen
                 coin.display()
         
-        for p in self.powerups:
+        for p in self.powerups: #displays powerup tokens on screen
                 p.display()
             
         self.f1Car.display() #displays f1Car on screen
@@ -322,24 +334,24 @@ class Game:
         text("Score:",0,40)
         fill(200,200,200)
         textSize(26)
-        text((0+self.f1Car.coin_count*100)+(self.f1Car.score_count),80,40) #shows score on top left of screen (distance + coin )
+        text((0+self.f1Car.coin_count*100)+(self.f1Car.score_count)+(self.f1Car.powerup_count*10000),80,40) #shows score on top left of screen (distance + coin + powerup)
         
         fill(255,255,255) 
         textSize(26)
         text("Power Ups:",0,80)
         fill(200,200,200)
         textSize(26)
-        text(self.f1Car.powerup_count,150,80)
+        text(self.f1Car.powerup_count,150,80) #shows powerup count on top left of screen
     
 game = Game(1440,900,519)
 
 def setup():
     size(game.w,game.h)
     background(0)
+    frameRate(70)
     
-def draw():  
-    
-    if game.state == "menu":
+def draw(): 
+    if game.state == "menu": #displays the menu screen
         image(game.menubackground,0,0)
         fill(0,0,0)
         rect(game.w//2.6,game.h//3.5,350,50)
@@ -349,9 +361,8 @@ def draw():
             fill(0,255,0)        
         else:
             fill(255,255,255)
-        
-        text("Instructions",560,300)
-
+            
+        text("Instructions",560,300) #displays the instructions button
         fill(0)
         rect(game.w//2.6,game.h//3.5+200,350,50)
         
@@ -359,33 +370,51 @@ def draw():
             fill(0,255,0)        
         else:
             fill(255,255,255)
-
-        text("Play Game",580,500)
-        
-        
-        
-        
+        text("Play Game",580,500)  #displays the play game button
+    
     if game.state == "instructions":
-        background(0)        
+        image(game.instructions,0,0)
+        fill(255,255,255)
+        textSize(40)
+        text("Instructions",game.w//2.2-80,100)
+        textSize(30)
+        fill(255,255,255)
+        text("~You are Sebastian Vettel, a German F1 driver currently driving for Scuderia Ferrari.",100,150) #Instructions for the game
+        text("~Your goal is to avoid enemy cars and drive to score as much points as possible",100,200)
+        text("~Collect coins to score extra points.",100,250)
+        text("~Collect powerups to obtain a special power.",100,300)
         
-    if game.state == "play game":
-            game.display()
-            if game.lose == True and game.win == False:
-                background(0)
-                game.display()
-            if game.pause == True:
-                textSize(30)
-                fill(255,0,0)
-                text("Paused",game.w//2,game.h//2)
+        fill(0,0,0)
+        rect(game.w//2.2,game.h//3.5+500,125,50)
+        textSize(58)
+        if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5+500<mouseY<game.h//3.5+550:
+            fill(0,255,0)        
+        else:
+            fill(255,255,255)
+        text("Back",game.w//2.2,game.h//3.5+550) #displays back button on screen
+        fill(0)               
+        
+    if game.state == "play" and game.pause == False:
+        background(0)
+        game.display()
+    elif game.pause == True:
+        textSize(30)
+        fill(255,0,0)
+        text("Paused",game.w//2,game.h//2)
+    
 
 def mouseClicked():
     if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5<mouseY<game.h//3.5+50:
-        game.state = "instructions"
-    
+        game.state = "instructions" #goes to instruction screen once instructions button is clicked"
+       
     if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5+200<mouseY<game.h//3.5+250:
-        game.state = "play game"
-    
-                
+        game.menuMusic.pause()
+        game.music.play()
+        game.state = "play" #goes to gamescreen once the play game button is clicked
+        
+    if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5+500<mouseY<game.h//3.5+550:
+        game.state = "menu" #goes back to menu screen once back button is clicked
+        
 def keyPressed():
     if keyCode == LEFT:
         game.f1Car.keyHandler[LEFT]=True
