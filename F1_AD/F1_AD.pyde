@@ -248,6 +248,7 @@ class Game:
         self.win_img = loadImage(path+"/Images/win.jpg")
         self.lose_img = loadImage(path+"/Images/gameover.png")
         self.f1Car = f1Car(50,665,20,self.g,"f1Car.png",110,80,1)
+        self.menubackground = loadImage(path+"/Images/menubackground.jpg")
         self.background_images=[]
         for i in range(6,0,-1):
             self.background_images.append(loadImage(path+"/Images/layer"+str(i)+".png"))
@@ -295,23 +296,24 @@ class Game:
             
     def display(self):
         cnt = 6
+            
         for img in self.background_images: #displays parallax background on screen
-            x = (game.x//cnt)%game.w
-            image(img,0-x,0)
-            image(img,self.w-x,0)
-            cnt-=1
+                x = (game.x//cnt)%game.w
+                image(img,0-x,0)
+                image(img,self.w-x,0)
+                cnt-=1
         
         for enemy in self.enemies: #displays enemies on screen
-            enemy.display()
+                enemy.display()
         
         for e in self.explosions: #displays car explosion on collision
-            e.display()
+                e.display()
             
         for coin in self.coins: #displays coins on screen
-            coin.display()
+                coin.display()
         
         for p in self.powerups:
-            p.display()
+                p.display()
             
         self.f1Car.display() #displays f1Car on screen
         
@@ -336,22 +338,54 @@ def setup():
     background(0)
     
 def draw():  
-    if game.pause != True and game.state == "menu":
-        game.display()
-    elif game.lose == True and game.win == False:
-        background(0)
-        game.display()
-    elif game.pause == True:
-        textSize(30)
-        fill(255,0,0)
-        text("Paused",game.w//2,game.h//2)
+    
+    if game.state == "menu":
+        image(game.menubackground,0,0)
+        fill(0,0,0)
+        rect(game.w//2.6,game.h//3.5,350,50)
+        textSize(58)
+        
+        if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5<mouseY<game.h//3.5+50:
+            fill(0,255,0)        
+        else:
+            fill(255,255,255)
+        
+        text("Instructions",560,300)
+
+        fill(0)
+        rect(game.w//2.6,game.h//3.5+200,350,50)
+        
+        if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5+200<mouseY<game.h//3.5+250:
+            fill(0,255,0)        
+        else:
+            fill(255,255,255)
+
+        text("Play Game",580,500)
+        
+        
+        
+        
+    if game.state == "instructions":
+        background(0)        
+        
+    if game.state == "play game":
+            game.display()
+            if game.lose == True and game.win == False:
+                background(0)
+                game.display()
+            if game.pause == True:
+                textSize(30)
+                fill(255,0,0)
+                text("Paused",game.w//2,game.h//2)
 
 def mouseClicked():
-    if game.w//2.5 < mouseX < game.w//2.5+250 and game.h//3 < mouseY < game.h//3+50:
-        game.menuMusic.pause()
-        game.music.play()
-        game.state="play"
-        
+    if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5<mouseY<game.h//3.5+50:
+        game.state = "instructions"
+    
+    if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5+200<mouseY<game.h//3.5+250:
+        game.state = "play game"
+    
+                
 def keyPressed():
     if keyCode == LEFT:
         game.f1Car.keyHandler[LEFT]=True
