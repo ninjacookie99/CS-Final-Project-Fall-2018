@@ -292,7 +292,7 @@ class Game: #main game class
         self.state = "menu"
         self.lose = False
         self.win = False
-        self.f1Car = f1Car(50,665,20,self.g,"f1Car.png",133,100,4) #creates f1Car object for the game class
+        self.f1Car = f1Car(50,665,20,self.g,"f1Car.png",132,100,4) #creates f1Car object for the game class
         #gameimages
         self.menubackground = loadImage(path+"/Images/menubackground.jpg")
         self.instructions = loadImage(path+"/Images/instructions.jpg")
