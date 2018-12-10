@@ -32,7 +32,7 @@ class Object:
                 self.vy = self.g - (self.y+self.r)
         else:
             self.vy = 0 
-        self.vx += 0.002 #increases the speed of the f1Car as the game progresses
+        self.vx += 0.008#increases the speed of the f1Car as the game progresses
         print self.vx
         
     def display(self):
@@ -149,9 +149,9 @@ class f1Car(Object):
                     del e
                     return
             
-        #returns back to the menue if game is lost
+        #returns back to the menu if game is lost
         if game.lose == True and game.win == False: 
-            time.sleep(2)
+            time.sleep(5)
             game.__init__(1440,900,519)
 
     def distance(self,e): #algorithm for collision detection
@@ -373,17 +373,11 @@ class Game: #main game class
        
         fill(255,255,255)  #shows powerup count on top left of screen
         textSize(26)
-        text("Power Ups:",0,80)
+        text("Shields:",0,80)
         fill(0,0,0)
         textSize(26)
         text(self.f1Car.powerup_count,150,80) 
         
-        fill(255,255,255) #shows distance travelled on top left of screen
-        textSize(26)
-        text("Distance:",0,120)
-        fill(0,0,0)
-        textSize(26)
-        text(self.f1Car.x-50,150,120) 
     
 game = Game(1440,900,519) #Game object
 
