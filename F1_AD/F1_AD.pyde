@@ -32,10 +32,12 @@ class Object:
                 self.vy = self.g - (self.y+self.r)
         else:
             self.vy = 0 
-        self.vx += 0.005 
+        self.vx += 0.002 #increases the speed of the f1Car as the game progresses
+        print self.vx
         
     def display(self):
         self.update()
+        
         # displays frames for various instances...
         if isinstance (self, Police):
             self.f = (self.f+0.1)%self.F
@@ -85,10 +87,10 @@ class f1Car(Object):
                     self.vx = 7 
                     self.dir = 1
             elif self.keyHandler[UP]:
-                    self.vy = -3
+                    self.vy = -4
                     self.dir = 1
             elif self.keyHandler[DOWN]:
-                    self.vy = 3
+                    self.vy = 4
                     self.dir = 1
         else:
             self.velocity()
@@ -96,30 +98,11 @@ class f1Car(Object):
                     self.vx = 7 
                     self.dir = 1
             elif self.keyHandler[UP]:
-                    self.vy = -3
+                    self.vy = -4
                     self.dir = 1
             elif self.keyHandler[DOWN]:
-                    self.vy = 3
+                    self.vy = 4
                     self.dir = 1
-                
-        if self.x > 10000: #changes f1Car velocity to 10 once f1car crosses x distance
-            self.vx = 10
-            if self.keyHandler[UP]:
-                self.vy = -5 #changes f1Car upward velocity to 4
-                self.dir = 1
-            elif self.keyHandler[DOWN]: 
-                self.vy = 5  #changes f1Car downward velocity to 4
-                self.dir = 1
-        elif self.x > 50000:
-            self.vx = 13 #changes f1Car velocity to 13 once f1car crosses x distance
-            if self.keyHandler[UP]:
-                self.vy = -5 #changes f1Car upward velocity to 5
-                self.dir = 1
-            elif self.keyHandler[DOWN]: 
-                self.vy = 5  #changes f1Car downward velocity to 5
-                self.dir = 1        
-        elif self.x > 100000 :
-                self.vx = 15 #changes f1Car velocity to 10 once f1car crosses x distance
                 
         if self.x > game.w/2:
             game.x += self.vx #creates movement illusion as f1Car reaches half of the screen
@@ -142,19 +125,19 @@ class f1Car(Object):
                     
         for s in game.score: #accumulates score as f1Car travels in x direction
             if self.x > 100 and game.lose == False:
-                self.score_count+= 2
+                self.score_count+= 5
                 
         for e in game.enemies: #collision detection
             if self.distance(e) <= self.r + e.r:
-                if self.shield == True:
+                if self.shield == True:  #removes shield power up and displays explosion on collision
                     self.shield = False
                     game.enemies.remove(e)
                     game.explosions.append(Explosion(e.x,e.y,50,0,"explosion.png",80,100,10))
                     self.death_sound.rewind()
                     self.death_sound.play()
                     del e
-                else:
-                    game.enemies.remove(e)
+                else:  #displays explosion on collision
+                    game.enemies.remove(e) 
                     game.explosions.append(Explosion(e.x,e.y,50,0,"explosion.png",80,100,10))
                     self.vx = 0
                     self.death_sound.rewind()
@@ -167,9 +150,9 @@ class f1Car(Object):
                     return
             
         #returns back to the menue if game is lost
-        # if game.lose == True and game.win == False: 
-        #     time.sleep(2)
-        #     game.__init__(1440,900,519)
+        if game.lose == True and game.win == False: 
+            time.sleep(2)
+            game.__init__(1440,900,519)
 
     def distance(self,e): #algorithm for collision detection
         return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
@@ -185,7 +168,11 @@ class Ambulance(Object): #ambulance class
     
     def update(self): 
         self.x += self.vx #velocity function for ambulance
+        self.vx += 0.002
         
+    def distance(self,e): #algorithm for collision detection
+        return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
+    
 class Police(Object): #police car class
     def __init__(self,x,y,r,g,img,w,h,F,x1,x2):
         Object.__init__(self,x,y,r,g,img,w,h,F)
@@ -198,6 +185,9 @@ class Police(Object): #police car class
     def update(self):
         self.x += self.vx #velocity function for Police
         self.vx += 0.002
+        
+    def distance(self,e): #algorithm for collision detection
+        return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
  
 class Taxi(Object):  #taxi class
     def __init__(self,x,y,r,g,img,w,h,F,x1,x2):
@@ -210,7 +200,11 @@ class Taxi(Object):  #taxi class
       
     def update(self):
         self.x += self.vx #velocity function for Taxi
-
+        self.vx += 0.0001
+    
+    def distance(self,e): #algorithm for collision detection
+        return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
+        
 class Viper(Object): #dodge viper class
     def __init__(self,x,y,r,g,img,w,h,F,x1,x2):
         Object.__init__(self,x,y,r,g,img,w,h,F)
@@ -221,14 +215,18 @@ class Viper(Object): #dodge viper class
     
     def update(self):
         self.x += self.vx #velocity function for Viper
+        self.vx += 0.0001
+        
+    def distance(self,e): #algorithm for collision detection
+        return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
 
 class Explosion(Object): #explosion class
     def __init__(self,x,y,r,g,img,w,h,F):
         Object.__init__(self,x,y,r,g,img,w,h,F)
         
     def update(self):
-        if int(self.f) == 9: #removes explosion frames from the screen
-            game.explosions.remove(self)
+        if int(self.f) == 9: 
+            game.explosions.remove(self) #removes explosion frames from the screen
             del self
             return
                  
@@ -243,19 +241,16 @@ class Coin: #coin class
         self.f = 0
         self.t = t
         self.img = loadImage(path+"/Images/coins.png")
-        self.dir = 1
-        
+
     def update(self):
         self.t = self.t + 1
 
     def display(self):
         self.update()
         self.f = (self.f+0.125)%self.F #displays coin frames on the screen
+        
         #displays coin image on the screen
-        if self.dir > 0:
-            image(self.img,self.x-self.w1//2-game.x,self.y-self.h1//2,self.w1,self.h1,int(self.f)*self.w1,0,int(self.f+1)*self.w1,self.h1)
-        elif self.dir < 0:
-            image(self.img,self.x-self.w1//2-game.x,self.y-self.h1//2,self.w1,self.h1,int(self.f+1)*self.w1,0,int(self.f)*self.w1,self.h1)
+        image(self.img,self.x-self.w1//2-game.x,self.y-self.h1//2,self.w1,self.h1,int(self.f)*self.w1,0,int(self.f+1)*self.w1,self.h1)
             
 class PowerUp: #powerup token class 
     def __init__(self,x,y,r,img,w1,h1,F,t):
@@ -268,7 +263,6 @@ class PowerUp: #powerup token class
         self.f = 0
         self.t = t
         self.img = loadImage(path+"/Images/powerup.png")
-        self.dir = 1
         
     def update(self):
         self.t = self.t + 1
@@ -276,33 +270,35 @@ class PowerUp: #powerup token class
     def display(self):
         self.update()
         self.f = (self.f+0.125)%self.F #displays powerup frames on the screen
-        #displays powerup image on the screen
-        if self.dir > 0:
-            image(self.img,self.x-self.w1//2-game.x,self.y-self.h1//2,self.w1,self.h1,int(self.f)*self.w1,0,int(self.f+1)*self.w1,self.h1)
-        elif self.dir < 0:
-            image(self.img,self.x-self.w1//2-game.x,self.y-self.h1//2,self.w1,self.h1,int(self.f+1)*self.w1,0,int(self.f)*self.w1,self.h1)
         
+        #displays powerup image on the screen
+        image(self.img,self.x-self.w1//2-game.x,self.y-self.h1//2,self.w1,self.h1,int(self.f)*self.w1,0,int(self.f+1)*self.w1,self.h1)
+
 class Game: #main game class  
     def __init__(self,w,h,g):
         self.w=w
         self.h=h
         self.g=g
         self.x=0
+        
+        #initial states for the game
         self.pause = False
-        self.state = "menu"
-        self.lose = False
+        self.state = "menu" 
+        self.lose = False 
         self.win = False
+        
         self.f1Car = f1Car(50,665,20,self.g,"f1Car.png",132,100,4) #creates f1Car object for the game class
+        
         #gameimages
         self.menubackground = loadImage(path+"/Images/menubackground.jpg")
         self.instructions = loadImage(path+"/Images/instructions.jpg")
         
-        self.background_images=[] 
+        self.background_images=[] #loads all the background images into a list
         for i in range(6,0,-1):
             self.background_images.append(loadImage(path+"/Images/layer"+str(i)+".png"))
         
         #game assets
-        self.enemies=[] #<--- Need to modify enemy spawn intensity into a for loop or sth 
+        self.enemies=[] #Stores all enemy objects into a list
         self.enemies.append(Police(2000,665,45,self.g,"police.png",130,80,3,self.x,0))
         self.enemies.append(Ambulance(2500,760,45,self.g,"ambulance.png",150,80,3,self.x,0))
         self.enemies.append(Taxi(3000,665,45,self.g,"taxi.png",110,80,1,self.x,0))
@@ -312,7 +308,7 @@ class Game: #main game class
         self.enemies.append(Taxi(8000,665,45,self.g,"taxi.png",110,80,1,self.x,0))
         self.enemies.append(Viper(9500,665,45,self.g,"viper.png",110,80,1,self.x,0))
         
-        self.coins = [] #<--- Need to modify coin spawn into a for loop or sth
+        self.coins = [] #stores all Coin objects into a list
         for i in range(10):
             self.coins.append(Coin(350+i*100,665,20,"coins.png",40,40,6,6))
             self.coins.append(Coin(1500+i*100,760,20,"coins.png",40,40,6,6))
@@ -328,7 +324,7 @@ class Game: #main game class
             self.coins.append(Coin(25000+i*100,575,20,"coins.png",40,40,6,6))
             self.coins.append(Coin(30000+i*100,665,20,"coins.png",40,40,6,6))
         
-        self.powerups = []
+        self.powerups = [] #stores all PowerUp objects into a list
         self.powerups.append(PowerUp(2000,665,30,"powerup.png",50,50,6,6))
         self.powerups.append(PowerUp(4500,760,30,"powerup.png",50,50,6,6))
         self.powerups.append(PowerUp(8500,575,30,"powerup.png",50,50,6,6))
@@ -367,27 +363,27 @@ class Game: #main game class
                 p.display()
             
         self.f1Car.display() #displays f1Car on screen
-        
-        fill(255,255,255) 
+       
+        fill(255,255,255)  #shows score on top left of screen (distance + coin + powerup)
         textSize(26)
         text("Score:",0,40)
         fill(200,200,200)
         textSize(26)
-        text((0+self.f1Car.coin_count*100)+(self.f1Car.score_count)+(self.f1Car.powerup_count*50000),80,40) #shows score on top left of screen (distance + coin + powerup)
-        
-        fill(255,255,255) 
+        text((0+self.f1Car.coin_count*500)+(self.f1Car.score_count),80,40) 
+       
+        fill(255,255,255)  #shows powerup count on top left of screen
         textSize(26)
         text("Power Ups:",0,80)
         fill(0,0,0)
         textSize(26)
-        text(self.f1Car.powerup_count,150,80) #shows powerup count on top left of screen
+        text(self.f1Car.powerup_count,150,80) 
         
-        fill(255,255,255) 
+        fill(255,255,255) #shows distance travelled on top left of screen
         textSize(26)
         text("Distance:",0,120)
         fill(0,0,0)
         textSize(26)
-        text(self.f1Car.x-50,150,120) #shows distance count on top left of screen
+        text(self.f1Car.x-50,150,120) 
     
 game = Game(1440,900,519) #Game object
 
@@ -478,6 +474,8 @@ def keyPressed():
     elif keyCode == 32 and game.f1Car.powerup_count >= 1:
         game.f1Car.powerup_count -= 1#uses powerup once spacebar is pressed
         game.f1Car.shield = True
+        game.f1Car.powerup_sound.rewind()
+        game.f1Car.powerup_sound.play()
     elif keyCode == 80:
         game.pause = not game.pause
         game.pauseSound.rewind()
