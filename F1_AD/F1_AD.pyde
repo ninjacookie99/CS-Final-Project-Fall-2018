@@ -1,5 +1,6 @@
 add_library('minim')
 import os,time
+import random
 path = os.getcwd()
 player = Minim(this)
 
@@ -32,9 +33,8 @@ class Object:
                 self.vy = self.g - (self.y+self.r)
         else:
             self.vy = 0 
-        self.vx += 0.008#increases the speed of the f1Car as the game progresses
-        print self.vx
-        
+        self.vx += 0.005 #increases the speed of the f1Car as the game progresses
+     
     def display(self):
         self.update()
         
@@ -50,7 +50,7 @@ class Object:
         elif isinstance (self, Explosion): 
             self.f = (self.f+0.1)%self.F
         elif isinstance (self, f1Car):
-            if self.shield == 1 and self.f < 4:
+            if self.shield == True and self.f < 4:
                 self.f = (self.f+0.2)%self.F
             elif self.shield == 1:
                 self.f = 4
@@ -74,7 +74,8 @@ class f1Car(Object):
         self.score_count = 0
         self.powerup_count = 0
         self.shield = False
-       
+        self.game_end = 80#seconds taken to end the game and refresh
+        
     def update(self):
         if self.y + self.r+20 > game.h: #lower absolute bound
             self.y = game.h - 45
@@ -87,10 +88,10 @@ class f1Car(Object):
                     self.vx = 7 
                     self.dir = 1
             elif self.keyHandler[UP]:
-                    self.vy = -4
+                    self.vy = -6
                     self.dir = 1
             elif self.keyHandler[DOWN]:
-                    self.vy = 4
+                    self.vy = 6
                     self.dir = 1
         else:
             self.velocity()
@@ -98,10 +99,10 @@ class f1Car(Object):
                     self.vx = 7 
                     self.dir = 1
             elif self.keyHandler[UP]:
-                    self.vy = -4
+                    self.vy = -6
                     self.dir = 1
             elif self.keyHandler[DOWN]:
-                    self.vy = 4
+                    self.vy = 6
                     self.dir = 1
                 
         if self.x > game.w/2:
@@ -150,9 +151,11 @@ class f1Car(Object):
                     return
             
         #returns back to the menu if game is lost
-        if game.lose == True and game.win == False: 
-            time.sleep(5)
-            game.__init__(1440,900,519)
+        if game.lose == True and game.win == False:
+            self.game_end -= 1
+            print self.game_end
+            if self.game_end == 0:
+                game.__init__(1440,900,519)
 
     def distance(self,e): #algorithm for collision detection
         return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
@@ -164,12 +167,11 @@ class Ambulance(Object): #ambulance class
         self.x2=x2
         self.vx = -3.5
         self.dir = 1
-        self.ambulanceSound = player.loadFile(path+"/Effects/ambulance.mp3")
-    
+        
     def update(self): 
         self.x += self.vx #velocity function for ambulance
-        self.vx += 0.002
-        
+        self.vx -= 0.002
+                
     def distance(self,e): #algorithm for collision detection
         return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
     
@@ -180,11 +182,10 @@ class Police(Object): #police car class
         self.x2=x2
         self.vx = -4.5
         self.dir = 1
-        self.policeSound = player.loadFile(path+"/Effects/police.mp3")
         
     def update(self):
         self.x += self.vx #velocity function for Police
-        self.vx += 0.002
+        self.vx -= 0.002
         
     def distance(self,e): #algorithm for collision detection
         return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
@@ -196,11 +197,10 @@ class Taxi(Object):  #taxi class
         self.x2=x2
         self.vx = -2
         self.dir = 1
-        self.taxiSound = player.loadFile(path+"/Effects/taxi.mp3")
       
     def update(self):
         self.x += self.vx #velocity function for Taxi
-        self.vx += 0.0001
+        self.vx -= 0.0001
     
     def distance(self,e): #algorithm for collision detection
         return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
@@ -215,7 +215,7 @@ class Viper(Object): #dodge viper class
     
     def update(self):
         self.x += self.vx #velocity function for Viper
-        self.vx += 0.0001
+        self.vx -= 0.003
         
     def distance(self,e): #algorithm for collision detection
         return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
@@ -247,7 +247,7 @@ class Coin: #coin class
 
     def display(self):
         self.update()
-        self.f = (self.f+0.125)%self.F #displays coin frames on the screen
+        self.f = (self.f+0.250)%self.F #displays coin frames on the screen
         
         #displays coin image on the screen
         image(self.img,self.x-self.w1//2-game.x,self.y-self.h1//2,self.w1,self.h1,int(self.f)*self.w1,0,int(self.f+1)*self.w1,self.h1)
@@ -269,7 +269,7 @@ class PowerUp: #powerup token class
 
     def display(self):
         self.update()
-        self.f = (self.f+0.125)%self.F #displays powerup frames on the screen
+        self.f = (self.f+0.350)%self.F #displays powerup frames on the screen
         
         #displays powerup image on the screen
         image(self.img,self.x-self.w1//2-game.x,self.y-self.h1//2,self.w1,self.h1,int(self.f)*self.w1,0,int(self.f+1)*self.w1,self.h1)
@@ -290,7 +290,7 @@ class Game: #main game class
         self.f1Car = f1Car(50,665,20,self.g,"f1Car.png",132,100,4) #creates f1Car object for the game class
         
         #gameimages
-        self.menubackground = loadImage(path+"/Images/menubackground.jpg")
+        self.menubackground = loadImage(path+"/Images/menubackground.png")
         self.instructions = loadImage(path+"/Images/instructions.jpg")
         
         self.background_images=[] #loads all the background images into a list
@@ -299,37 +299,32 @@ class Game: #main game class
         
         #game assets
         self.enemies=[] #Stores all enemy objects into a list
-        self.enemies.append(Police(2000,665,45,self.g,"police.png",130,80,3,self.x,0))
-        self.enemies.append(Ambulance(2500,760,45,self.g,"ambulance.png",150,80,3,self.x,0))
-        self.enemies.append(Taxi(3000,665,45,self.g,"taxi.png",110,80,1,self.x,0))
-        self.enemies.append(Viper(2500,570,45,self.g,"viper.png",110,80,1,self.x,0))
-        self.enemies.append(Police(5000,665,45,self.g,"police.png",130,80,3,self.x,0))
-        self.enemies.append(Ambulance(6500,760,45,self.g,"ambulance.png",150,80,3,self.x,0))
-        self.enemies.append(Taxi(8000,665,45,self.g,"taxi.png",110,80,1,self.x,0))
-        self.enemies.append(Viper(9500,665,45,self.g,"viper.png",110,80,1,self.x,0))
-        
+        for j in range(50):
+            for i in range(1):
+                self.enemies.append(Police((1000)+j*2500+i*50,665,45,self.g,"police.png",130,80,3,self.x,0))
+                self.enemies.append(Ambulance((1440)+j*5000+i*50,760,45,self.g,"ambulance.png",150,80,3,self.x,0))
+                self.enemies.append(Taxi((3500)+j*7500+i*50,550,45,self.g,"taxi.png",110,80,1,self.x,0))
+                self.enemies.append(Viper((5000)+j*10000+i*50,850,45,self.g,"viper.png",110,80,1,self.x,0))
+                random.shuffle(self.enemies)
+                        
         self.coins = [] #stores all Coin objects into a list
-        for i in range(10):
-            self.coins.append(Coin(350+i*100,665,20,"coins.png",40,40,6,6))
-            self.coins.append(Coin(1500+i*100,760,20,"coins.png",40,40,6,6))
-            self.coins.append(Coin(3000+i*100,850,20,"coins.png",40,40,6,6))
-            self.coins.append(Coin(5000+i*100,760,20,"coins.png",40,40,6,6))
-            self.coins.append(Coin(6500+i*100,850,20,"coins.png",40,40,6,6))
-            self.coins.append(Coin(8000+i*100,575,20,"coins.png",40,40,6,6))
-            self.coins.append(Coin(9500+i*100,665,20,"coins.png",40,40,6,6))
-            self.coins.append(Coin(12000+i*100,850,20,"coins.png",40,40,6,6))
-            self.coins.append(Coin(13500+i*100,575,20,"coins.png",40,40,6,6))
-            self.coins.append(Coin(15000+i*100,665,20,"coins.png",40,40,6,6))
-            self.coins.append(Coin(18000+i*100,850,20,"coins.png",40,40,6,6))
-            self.coins.append(Coin(25000+i*100,575,20,"coins.png",40,40,6,6))
-            self.coins.append(Coin(30000+i*100,665,20,"coins.png",40,40,6,6))
-        
+        for j in range(50):
+            for i in range (10):
+                self.coins.append(Coin((350)+j*2500+i*50,665,20,"coins.png",40,40,6,6)) 
+                self.coins.append(Coin((1440)+j*5000+i*50,760,20,"coins.png",40,40,6,6))
+                self.coins.append(Coin((3500)+j*7500+i*50,550,20,"coins.png",40,40,6,6))
+                self.coins.append(Coin((5000)+j*10000+i*50,850,20,"coins.png",40,40,6,6))
+                random.shuffle(self.coins)
+            
         self.powerups = [] #stores all PowerUp objects into a list
-        self.powerups.append(PowerUp(2000,665,30,"powerup.png",50,50,6,6))
-        self.powerups.append(PowerUp(4500,760,30,"powerup.png",50,50,6,6))
-        self.powerups.append(PowerUp(8500,575,30,"powerup.png",50,50,6,6))
-        self.powerups.append(PowerUp(15000,850,30,"powerup.png",50,50,6,6))
-        
+        for x in range(50):
+            for y in range (1):
+                self.powerups.append(PowerUp((1200)+x*10000,550,30,"powerup.png",50,50,6,6)) 
+                self.powerups.append(PowerUp((2400)+x*10000,665,30,"powerup.png",50,50,6,6))
+                self.powerups.append(PowerUp((3600)+x*10000,850,30,"powerup.png",50,50,6,6))
+                self.powerups.append(PowerUp((4800)+x*10000,760,30,"powerup.png",50,50,6,6))
+                random.shuffle(self.powerups)
+
         self.score = [0]
         self.explosions = []
         
@@ -369,16 +364,15 @@ class Game: #main game class
         text("Score:",0,40)
         fill(200,200,200)
         textSize(26)
-        text((0+self.f1Car.coin_count*500)+(self.f1Car.score_count),80,40) 
+        text((0+self.f1Car.coin_count*1000)+(self.f1Car.score_count),80,40) 
        
         fill(255,255,255)  #shows powerup count on top left of screen
         textSize(26)
         text("Shields:",0,80)
         fill(0,0,0)
         textSize(26)
-        text(self.f1Car.powerup_count,150,80) 
+        text(self.f1Car.powerup_count,100,80) 
         
-    
 game = Game(1440,900,519) #Game object
 
 def setup():
@@ -387,36 +381,37 @@ def setup():
     frameRate(70)
     
 def draw(): 
+    font = loadFont("MS-PGothic-48.vlw")
     if game.state == "menu": #displays the menu screen
         image(game.menubackground,0,0)
         fill(0,0,0)
-        rect(game.w//2.6,game.h//3.5,350,50)
-        textSize(58)
         
+        rect(game.w//2.6,game.h//3.5,300,50)
         if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5<mouseY<game.h//3.5+50:
             fill(0,0,255)        
         else:
             fill(255,255,255)
-            
+         
+        textFont(font,58)
         text("Instructions",560,300) #displays the instructions button
         fill(0)
-        rect(game.w//2.6,game.h//3.5+200,350,50)
         
+        rect(game.w//2.6,game.h//3.5+200,300,50)
         if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5+200<mouseY<game.h//3.5+250:
             fill(0,0,255)        
         else:
             fill(255,255,255)
+        textFont(font,58)
         text("Play Game",580,500)  #displays the play game button
     
     if game.state == "instructions":
-        #image(game.instructions,0,0)
-        background(0)
-        fill(255,255,255)
-        textSize(40)
-        text("Instructions",game.w//2.2-60,100)
-        textSize(30)
+        image(game.instructions,0,0,1440,900)
         fill(0,0,255)
+        textFont(font,60)
+        text("Instructions",game.w//2.2-60,100)
+        fill(0,255,100)
         #Instructions for the game
+        textFont(font,40)
         text("~Your goal is to avoid enemy cars and drive to score as much points as possible",100,200)
         text("~Collect coins to score extra points.",100,250)
         text("~Collect powerups to obtain extra points.",100,300)
