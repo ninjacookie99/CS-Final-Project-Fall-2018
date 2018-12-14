@@ -98,12 +98,12 @@ class f1Car(Object):
                     self.vx = 7 
                     self.dir = 1
             elif self.keyHandler[UP]:
-                    self.vy = -6
+                    self.vy = -6.5
                     self.dir = 1
             elif self.keyHandler[DOWN]:
-                    self.vy = 6
+                    self.vy = 6.5
                     self.dir = 1
-                
+
         if self.x > game.w/2:
             game.x += self.vx #creates movement illusion as f1Car reaches half of the screen
                 
@@ -172,9 +172,6 @@ class Ambulance(Object): #ambulance class
     def update(self): 
         self.x += self.vx #velocity function for ambulance
         self.vx -= 0.002
-                
-    def distance(self,e): #algorithm for collision detection
-        return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
     
 class Police(Object): #police car class
     def __init__(self,x,y,r,g,img,w,h,F,x1,x2):
@@ -188,9 +185,6 @@ class Police(Object): #police car class
         self.x += self.vx #velocity function for Police
         self.vx -= 0.0001
         
-    def distance(self,e): #algorithm for collision detection
-        return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
- 
 class Taxi(Object):  #taxi class
     def __init__(self,x,y,r,g,img,w,h,F,x1,x2):
         Object.__init__(self,x,y,r,g,img,w,h,F)
@@ -202,9 +196,6 @@ class Taxi(Object):  #taxi class
     def update(self):
         self.x += self.vx #velocity function for Taxi
         self.vx -= 0.0015
-    
-    def distance(self,e): #algorithm for collision detection
-        return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
         
 class Viper(Object): #dodge viper class
     def __init__(self,x,y,r,g,img,w,h,F,x1,x2):
@@ -217,9 +208,6 @@ class Viper(Object): #dodge viper class
     def update(self):
         self.x += self.vx #velocity function for Viper
         self.vx -= 0.002
-        
-    def distance(self,e): #algorithm for collision detection
-        return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
 
 class Explosion(Object): #explosion class
     def __init__(self,x,y,r,g,img,w,h,F):
@@ -307,7 +295,7 @@ class Game: #main game class
                 self.enemies.append(Ambulance((1440)+j*5000+i*50,760,45,self.g,"ambulance.png",150,80,3,self.x,0))
                 self.enemies.append(Taxi((3500)+j*7500+i*50,552,45,self.g,"taxi.png",110,80,1,self.x,0))
                 self.enemies.append(Viper((5000)+j*10000+i*50,860,45,self.g,"viper.png",110,80,1,self.x,0))
-            
+    
         self.coins = [] #stores all Coin objects into a list
         for j in range(50):
             for i in range (10):
@@ -414,13 +402,13 @@ def draw():
         text("Play Game",580,500) #displays the play game button
         
         fill(0)
-        rect(game.w//2.4,game.h//3.5+400,170,50)
-        if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5+400<mouseY<game.h//3.5+450:
+        rect(game.w//2-90,game.h//3.5+400,150,50)
+        if game.w//2.5< mouseX <game.w//2.6+300 and game.h//3.5+400<mouseY<game.h//3.5+450:
             fill(0,0,255)        
         else:
             fill(255,255,255)
         textFont(font,58)
-        text("Scores",600,700)  #displays the scores button
+        text("Score",630,700)  #displays the scores button
         
     elif game.state == "instructions":  #goes to instructions screen
         image(game.instructions,0,0,1440,900)
