@@ -28,9 +28,9 @@ class Object:
         self.y += self.vy
        
         if self.y+self.r < self.g:
-            self.vy = 0
+            self.vy = 0  #keeps objects floating beyond the screen
             if self.vy > self.g - (self.y+self.r):
-                self.vy = self.g - (self.y+self.r)
+                self.vy = self.g - (self.y+self.r) #allows the objects to move down
         else:
             self.vy = 0 
         self.vx += 0.003 #increases the speed of the f1Car as the game progresses
