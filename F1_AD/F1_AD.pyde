@@ -33,7 +33,7 @@ class Object:
                 self.vy = self.g - (self.y+self.r)
         else:
             self.vy = 0 
-        self.vx += 0.003 #increases the speed of the f1Car as the game progresses
+        self.vx += 0.0005 #increases the speed of the f1Car as the game progresses
      
     def display(self):
         self.update()
@@ -71,7 +71,6 @@ class f1Car(Object):
         self.powerup_sound = player.loadFile(path+"/Effects/powerup.mp3")
         self.death_sound = player.loadFile(path+"/Effects/death.mp3")
         self.coin_count = 0
-        # self.score_count = 0
         self.powerup_count = 0
         self.shield = False
         self.game_end = 80#seconds taken to end the game and refresh
@@ -154,8 +153,11 @@ class f1Car(Object):
         #returns back to the menu if game is lost
         if game.lose == True and game.win == False:
             self.game_end -= 1
-            print self.game_end
             if self.game_end == 0:
+                file = open("highscores.txt","a")
+                score = str((game.score)+(self.coin_count*1000))
+                file.write(score+"\n")
+                file.close()
                 game.__init__(1440,900,519)
 
     def distance(self,e): #algorithm for collision detection
@@ -171,7 +173,7 @@ class Ambulance(Object): #ambulance class
         
     def update(self): 
         self.x += self.vx #velocity function for ambulance
-        self.vx -= 0.001
+        self.vx -= 0.0005
                 
     def distance(self,e): #algorithm for collision detection
         return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
@@ -186,7 +188,7 @@ class Police(Object): #police car class
         
     def update(self):
         self.x += self.vx #velocity function for Police
-        self.vx -= 0.001
+        self.vx -= 0.0005
         
     def distance(self,e): #algorithm for collision detection
         return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
@@ -216,7 +218,7 @@ class Viper(Object): #dodge viper class
     
     def update(self):
         self.x += self.vx #velocity function for Viper
-        self.vx -= 0.003
+        self.vx -= 0.0001
         
     def distance(self,e): #algorithm for collision detection
         return ((self.x-e.x)**2+(self.y-e.y)**2)**0.5
@@ -281,7 +283,7 @@ class Game: #main game class
         self.h=h
         self.g=g
         self.x=0
-        self.score = 0
+        self.score = 0 
         
         #initial states for the game
         self.pause = False
@@ -322,10 +324,10 @@ class Game: #main game class
         self.powerups = [] #stores all PowerUp objects into a list
         for x in range(50):
             for y in range (1):
-                self.powerups.append(PowerUp((1200)+x*10000,550,30,"powerup.png",50,50,6,6)) 
-                self.powerups.append(PowerUp((2400)+x*10000,665,30,"powerup.png",50,50,6,6))
-                self.powerups.append(PowerUp((3600)+x*10000,850,30,"powerup.png",50,50,6,6))
-                self.powerups.append(PowerUp((4800)+x*10000,760,30,"powerup.png",50,50,6,6))
+                self.powerups.append(PowerUp((2000)+x*10000,550,30,"powerup.png",50,50,6,6)) 
+                self.powerups.append(PowerUp((7000)+x*10000,665,30,"powerup.png",50,50,6,6))
+                self.powerups.append(PowerUp((12000)+x*10000,850,30,"powerup.png",50,50,6,6))
+                self.powerups.append(PowerUp((17000)+x*10000,760,30,"powerup.png",50,50,6,6))
                 random.shuffle(self.powerups)
                 
         self.explosions = []
@@ -336,8 +338,8 @@ class Game: #main game class
         self.menuMusic = player.loadFile(path+"/Effects/menu.mp3")
         self.menuMusic.play()
         self.winSound = player.loadFile(path+"/Effects/win.mp3")
-        self.loseSound = player.loadFile(path+"/Effects/lose.mp3")
         self.f1Sound = player.loadFile(path+"/Effects/formula1.mp3")
+        self.clickSound = player.loadFile(path+"/Effects/click.mp3")
 
     def display(self):
         cnt = 6
@@ -373,21 +375,20 @@ class Game: #main game class
         text("Shields:",0,80)
         fill(200,200,200)
         textSize(26)
-        text(self.f1Car.powerup_count,100,80) 
+        text(self.f1Car.powerup_count,100,80)
         
 game = Game(1440,900,519) #Game object
 
 def setup():
     size(game.w,game.h)
     background(0)
-    frameRate(70)
+    frameRate(60)
     
 def draw(): 
     font = loadFont("MS-PGothic-48.vlw")
     if game.state == "menu": #displays the menu screen
         image(game.menubackground,0,0)
         fill(0,0,0)
-        
         rect(game.w//2.6,game.h//3.5,300,50)
         if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5<mouseY<game.h//3.5+50:
             fill(0,0,255)        
@@ -404,9 +405,18 @@ def draw():
         else:
             fill(255,255,255)
         textFont(font,58)
-        text("Play Game",580,500)  #displays the play game button
-    
-    if game.state == "instructions":
+        text("Play Game",580,500) #displays the play game button
+        
+        fill(0)
+        rect(game.w//2.4,game.h//3.5+400,170,50)
+        if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5+400<mouseY<game.h//3.5+450:
+            fill(0,0,255)        
+        else:
+            fill(255,255,255)
+        textFont(font,58)
+        text("Scores",600,700) 
+        
+    elif game.state == "instructions":
         image(game.instructions,0,0,1440,900)
         fill(0,0,255)
         textFont(font,60)
@@ -416,11 +426,9 @@ def draw():
         textFont(font,40)
         text("~Your goal is to avoid enemy cars and drive to score as much points as possible",100,200)
         text("~Collect coins to score extra points.",100,250)
-        text("~Collect powerups to obtain extra points.",100,300)
-        text("~Use the up and down arrow keys to move the f1 car across the road.",100,350)
-        text("~Press the right arrow to start the F1 car and begin movement.",100,400)
+        text("~Use the up and down arrow keys to move the f1 car across the road.",100,300)
+        text("~Press the right arrow to start the F1 car and begin movement.",100,350)
         text("~Press spacebar to use the power up and P to pause the game.",100,450)
-        text("~You may use powerups at the expense of points.",100,500)
          
         fill(0,0,0)
         rect(game.w//2.2,game.h//3.5+500,125,50)
@@ -431,26 +439,59 @@ def draw():
             fill(255,255,255)
         text("Back",game.w//2.2,game.h//3.5+550) #displays back button on screen
         fill(0)               
+    
+    elif game.state == "scores":
+        background(0)
         
-    if game.state == "play" and game.pause == False:
+        score_file = open("highscores.txt","r") #opens the highscores text in read mode
+        for a in score_file:
+            x= a.strip()
+        score_file.close()
+        fill(255,255,255)
+        textSize(58)
+        text("Previous score: "+ x,(game.w//2)-300,game.h//2) #display the scores in the scores panel.
+        
+        fill(0,0,0)
+        rect(game.w//2.2,game.h//3.5+500,125,50)
+        textSize(58)
+        if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5+500<mouseY<game.h//3.5+550:
+            fill(255,0,0)        
+        else:
+            fill(255,255,255)
+        text("Back",game.w//2.2,game.h//3.5+550) #displays back button on screen
+        fill(0)    
+        
+    elif game.state == "play" and game.pause == False:
         background(0)
         game.display()
+        
     elif game.pause == True:
-        textSize(30)
+        textSize(40)
         fill(255,0,0)
         text("Paused",game.w//2,game.h//2)
     
 def mouseClicked():
     if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5<mouseY<game.h//3.5+50:
+        game.clickSound.rewind()
+        game.clickSound.play()
         game.state = "instructions" #goes to instruction screen once instructions button is clicked"
        
-    if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5+200<mouseY<game.h//3.5+250:
+    elif game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5+200<mouseY<game.h//3.5+250:
+        game.clickSound.rewind()
+        game.clickSound.play()
         game.menuMusic.pause()
         game.music.play()
         game.state = "play" #goes to gamescreen once the play game button is clicked
         
-    if game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5+500<mouseY<game.h//3.5+550:
+    elif game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5+500<mouseY<game.h//3.5+550:
+        game.clickSound.rewind()
+        game.clickSound.play()
         game.state = "menu" #goes back to menu screen once back button is clicked
+    
+    elif game.w//2.6< mouseX <game.w//2.6+350 and game.h//3.5+400<mouseY<game.h//3.5+450:
+        game.clickSound.rewind()
+        game.clickSound.play()
+        game.state = "scores" #goes back to menu screen once back button is clicked
         
 def keyPressed():
     if keyCode == LEFT:
@@ -487,3 +528,4 @@ def keyReleased():
         game.f1Car.keyHandler[LEFT]=False
     elif keyCode == RIGHT:
         game.f1Car.keyHandler[RIGHT]=False
+        
