@@ -1,4 +1,4 @@
-# CS-Final-Project-Fall-2018
+# Python Mini-Game using classes and inheritance
 
 Introduction to Computer Science Fall 2018: Final Project 
 
